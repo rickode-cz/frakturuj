@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@plugin '@tailwindcss/typography';
+
+@theme {  
+ --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";  
+ --font-serif: "Chango", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
