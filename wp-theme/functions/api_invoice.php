@@ -2,11 +2,18 @@
 
 function rk_toggle_invoice_paid($request) {
  $invoice_id = $request['id'];
- 
- // Check if invoice exists
+ $user_id = get_current_user_id();
  $post = get_post($invoice_id);
+ 
+ // Check if invoice exists and belongs to current user
+ $post = get_post($invoice_id);
+
  if (!$post || $post->post_type !== 'invoice') {
      return new WP_Error('not_found', 'Faktura nenalezena', array('status' => 404));
+ }
+
+ if ($post->post_author != $user_id) {
+     return new WP_Error('unauthorized', 'Nemáte oprávnění upravit tuto fakturu', array('status' => 403));
  }
 
  // Get current paid status and toggle it

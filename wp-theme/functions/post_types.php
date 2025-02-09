@@ -8,8 +8,8 @@ function rk_post_types()
     'has_archive' => false,
     'exclude_from_search' => true,
     'show_in_rest' => true,
-    'show_ui' => true,
-    'show_in_menu' => true,
+    'show_ui' => false,
+    'show_in_menu' => false,
     'supports' => ['title'],
   ];
 
