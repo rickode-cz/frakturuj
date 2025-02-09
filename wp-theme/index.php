@@ -4,7 +4,7 @@ if (!function_exists('is_single') || !function_exists('wp_redirect')) {
   require_once(dirname(__FILE__) . '/wp-load.php');
 }
 
-if ($_SERVER['HTTP_HOST'] === 'app.frakturuj.cz') {
+if ($_SERVER['HTTP_HOST'] === 'demo.frakturuj.cz') {
     if (!is_user_logged_in()) {
         wp_set_current_user(2);
         wp_set_auth_cookie(2);

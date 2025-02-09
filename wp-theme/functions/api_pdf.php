@@ -23,7 +23,7 @@ function generate_pdf($html, $filename = 'document.pdf', $paper = 'A4', $orienta
 
 function rk_generate_invoice_pdf($request) {
     $invoice_id = $request['id'];
-    $user_id = get_current_user_id()()();
+    $user_id = get_current_user_id();
     $invoice = get_post($invoice_id);
     
     if (!$invoice || $invoice->post_type !== 'invoice') {
