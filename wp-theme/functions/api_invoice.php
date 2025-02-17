@@ -72,6 +72,12 @@ function rk_create_invoice($request) {
      'post_author' => $user_id
  );
 
+ // Add custom post date if provided
+ if (!empty($params['created_date'])) {
+     $post_data['post_date'] = $params['created_date'];
+     $post_data['post_date_gmt'] = get_gmt_from_date($params['created_date']);
+ }
+
  $post_id = wp_insert_post($post_data);
 
  if (is_wp_error($post_id)) {
@@ -119,10 +125,18 @@ function rk_update_invoice($request) {
      return new WP_Error('missing_fields', 'Chybí povinné údaje', array('status' => 400));
  }
 
- wp_update_post(array(
+ $post_data = array(
      'ID' => $invoice_id,
      'post_title' => sanitize_text_field($params['title'])
- ));
+ );
+
+ // Add custom post date if provided
+ if (!empty($params['created_date'])) {
+     $post_data['post_date'] = $params['created_date'];
+     $post_data['post_date_gmt'] = get_gmt_from_date($params['created_date']);
+ }
+
+ wp_update_post($post_data);
 
  $fields = array('customer', 'items', 'maturity');
  foreach ($fields as $field) {

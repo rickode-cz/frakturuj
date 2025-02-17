@@ -45,7 +45,7 @@
 
    <div class="flex flex-row justify-center items-center gap-2">
    <button
-    class="px-6 py-3 bg-green-600 rounded hover:bg-green-700 font-medium"
+    class="cursor-pointer px-6 py-3 bg-green-600 rounded hover:bg-green-700 font-medium"
     on:click={openProfileModal}
    >
     Vyplnit údaje

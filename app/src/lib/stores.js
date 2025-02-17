@@ -13,7 +13,8 @@ export const profile = writable({
     email: '',
     phone: '',
     bank_account: '',
-    bank_code: ''
+    bank_code: '',
+    invoice_text: 'Fyzická osoba zapsaná v živnostenském rejstříku.'
 });
 export const isProfileModalOpen = writable(false);
 export const notification = writable(null);

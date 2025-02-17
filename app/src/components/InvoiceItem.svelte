@@ -76,6 +76,20 @@
    onDuplicate(invoice);
   }
  }
+
+ function formatItemDescription(item) {
+  if (item.pricing_type === 'total') {
+    return ''; // Don't show any additional description for total pricing
+  }
+  return `${item.quantity} ${item.units} × ${item.price_per_unit.toLocaleString("cs-CZ")} Kč`;
+}
+
+function getItemTotal(item) {
+  if (item.pricing_type === 'total') {
+    return parseFloat(item.price_per_unit) || 0;
+  }
+  return (item.quantity || 0) * (item.price_per_unit || 0);
+}
 </script>
 
 <div class="bg-zinc-700 p-3 sm:p-4 rounded-lg">
@@ -265,12 +279,11 @@
       <div>
        <span class="text-zinc-300">{item.name}</span>
        <span class="text-zinc-500 ml-2">
-        {item.quantity}
-        {item.units} × {item.price_per_unit.toLocaleString("cs-CZ")} Kč
+        {formatItemDescription(item)}
        </span>
       </div>
       <div class="text-zinc-300">
-       {(item.quantity * item.price_per_unit).toLocaleString("cs-CZ")} Kč
+       {getItemTotal(item).toLocaleString("cs-CZ")} Kč
       </div>
      </div>
     {/each}

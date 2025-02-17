@@ -52,7 +52,8 @@ function rk_generate_invoice_pdf($request) {
         'email' => get_option("rk_profile_{$user_id}_email"),
         'phone' => get_option("rk_profile_{$user_id}_phone"),
         'bank_account' => get_option("rk_profile_{$user_id}_bank_account"),
-        'bank_code' => get_option("rk_profile_{$user_id}_bank_code")
+        'bank_code' => get_option("rk_profile_{$user_id}_bank_code"),
+        'invoice_text' => get_option("rk_profile_{$user_id}_invoice_text", 'Fyzická osoba zapsaná v živnostenském rejstříku.')
     );
 
     // Calculate total before generating QR code
@@ -239,6 +240,9 @@ function rk_generate_invoice_pdf($request) {
     }
     
     $html .= '</div>
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 1cm; font-size: 8pt; color: #666;">
+        ' . esc_html($profile['invoice_text']) . '
+    </div>
     </body>
     </html>';
 

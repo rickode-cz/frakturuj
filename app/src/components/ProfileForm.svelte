@@ -195,27 +195,6 @@
     />
    </div>
 
-   <div>
-    <label for="email" class="block text-base text-zinc-400 mb-1">Email</label>
-    <input
-     id="email"
-     type="email"
-     bind:value={$profile.email}
-     class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-   </div>
-
-   <div>
-    <label for="phone" class="block text-base text-zinc-400 mb-1">Telefon</label
-    >
-    <input
-     id="phone"
-     type="tel"
-     bind:value={$profile.phone}
-     class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-   </div>
-
    <div class="grid grid-cols-2 gap-4">
     <div>
      <label for="bank_account" class="block text-base text-zinc-400 mb-1"
@@ -241,6 +220,18 @@
       required
      />
     </div>
+   </div>
+
+   <div>
+    <label for="invoice_text" class="block text-base text-zinc-400 mb-1">Text na faktuře</label>
+    <input
+     id="invoice_text"
+     type="text"
+     bind:value={$profile.invoice_text}
+     class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+     required
+    />
+    <p class="text-sm text-zinc-500 mt-1">Text zobrazený v patičce faktury</p>
    </div>
 
    <div class="flex gap-4 pt-4">

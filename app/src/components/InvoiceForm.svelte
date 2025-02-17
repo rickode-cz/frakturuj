@@ -21,7 +21,12 @@
  }
 
  function addDaysToToday(days) {
-  const date = new Date();
+  let date = new Date();
+
+  if(formData.created_date) {
+   date = new Date(formData.created_date);
+  }
+
   date.setDate(date.getDate() + days);
   return date.toISOString().split("T")[0];
  }
@@ -37,22 +42,24 @@
   const yearInvoices = $apiData.invoices.filter(
    (inv) => new Date(inv.created_date).getFullYear() === year,
   );
-   return `${year}-${String(yearInvoices.length + 1).padStart(2, "0")}`
+   return `${year}${String(yearInvoices.length + 1).padStart(4, "0")}`
  }
 
  let formData = {
   title: "",
   customer: "",
   maturity: getDefaultMaturity(),
+  created_date: new Date().toISOString().split("T")[0],
   items: [],
  };
 
- // Set next invoice number and reset maturity on new form
+ // Set next invoice number and reset dates on new form
  if (!editData && $apiData?.invoices) {
   formData = {
    ...formData,
    title: generateTitle(),
    maturity: getDefaultMaturity(),
+   created_date: new Date().toISOString().split("T")[0],
   };
  }
 
@@ -68,13 +75,16 @@
    title: editData?.title || generateTitle(),
    customer: editData?.acf?.customer,
    maturity: editData?.acf?.maturity || getDefaultMaturity(),
+   created_date: editData?.created_date?.split(" ")[0] || new Date().toISOString().split("T")[0],
    items: parsedItems.length ? parsedItems : [createEmptyItem()],
   };
  }
 
  // Calculate totals
  $: itemTotals = formData.items.map(
-  (item) => (item.price_per_unit || 0) * (item.quantity || 0),
+  (item) => item.pricing_type === 'total' ? 
+    (parseFloat(item.price_per_unit) || 0) : 
+    (item.price_per_unit || 0) * (item.quantity || 0)
  );
  $: invoiceTotal = itemTotals.reduce((sum, total) => sum + total, 0);
 
@@ -84,8 +94,15 @@
    price_per_unit: "",
    units: "h",
    quantity: "1",
+   pricing_type: "unit" // Add default pricing type (unit/total)
   };
  }
+
+ // When switching to total pricing, clear the units field
+ $: formData.items = formData.items.map(item => ({
+  ...item,
+  units: item.pricing_type === 'total' ? '' : item.units || 'h'
+ }));
 
  function addItem() {
   formData.items = [...formData.items, createEmptyItem()];
@@ -180,7 +197,7 @@
    on:submit|preventDefault={handleSubmit}
    class="space-y-4 flex-1 flex flex-col"
   >
-   <div class="grid grid-cols-2 gap-4">
+   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <div>
      <label for="title" class="block text-base text-zinc-400 mb-1"
       >Číslo faktury</label
@@ -189,6 +206,16 @@
       id="title"
       type="text"
       bind:value={formData.title}
+      class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+     />
+    </div>
+    <div>
+     <label for="created_date" class="block text-base text-zinc-400 mb-1">Datum vystavení</label>
+     <input
+      id="created_date"
+      type="date"
+      bind:value={formData.created_date}
       class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
       required
      />
@@ -209,51 +236,50 @@
       {/each}
      </select>
     </div>
-   </div>
-
-   <div>
-    <label for="maturity" class="block text-base text-zinc-400 mb-1"
-     >Datum splatnosti</label
-    >
-    {#if !editData || duplicatingInvoice}
-     <div class="flex gap-2 mb-2">
-      <button
-       type="button"
-       class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
-       on:click={() => setMaturityDate(0)}
-      >
-       Dnes
-      </button>
-      <button
-       type="button"
-       class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
-       on:click={() => setMaturityDate(10)}
-      >
-       10 dní
-      </button>
-      <button
-       type="button"
-       class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
-       on:click={() => setMaturityDate(14)}
-      >
-       14 dní
-      </button>
-      <button
-       type="button"
-       class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
-       on:click={() => setMaturityDate(30)}
-      >
-       Měsíc
-      </button>
-     </div>
-    {/if}
-    <input
-     id="maturity"
-     type="date"
-     bind:value={formData.maturity}
-     class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-     required
-    />
+    <div>
+     <label for="maturity" class="block text-base text-zinc-400 mb-1"
+      >Datum splatnosti</label
+     >
+     {#if !editData || duplicatingInvoice}
+      <div class="flex gap-2 mb-2">
+       <button
+        type="button"
+        class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
+        on:click={() => setMaturityDate(0)}
+       >
+        Dnes
+       </button>
+       <button
+        type="button"
+        class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
+        on:click={() => setMaturityDate(10)}
+       >
+        10 dní
+       </button>
+       <button
+        type="button"
+        class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
+        on:click={() => setMaturityDate(14)}
+       >
+        14 dní
+       </button>
+       <button
+        type="button"
+        class="px-3 py-1 text-base bg-zinc-700 hover:bg-zinc-600 rounded"
+        on:click={() => setMaturityDate(30)}
+       >
+        Měsíc
+       </button>
+      </div>
+     {/if}
+     <input
+      id="maturity"
+      type="date"
+      bind:value={formData.maturity}
+      class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+     />
+    </div>    
    </div>
 
    {#if error}
@@ -277,64 +303,119 @@
         />
        </div>
 
+       <!-- Pricing type switcher -->
+       <div class="flex gap-2 mb-2">
+        <button
+         type="button"
+         class="px-3 py-1 text-base {item.pricing_type === 'unit' ? 'bg-blue-600' : 'bg-zinc-700 hover:bg-zinc-600'} rounded"
+         on:click={() => item.pricing_type = 'unit'}
+        >
+         Cena za jednotku
+        </button>
+        <button
+         type="button"
+         class="px-3 py-1 text-base {item.pricing_type === 'total' ? 'bg-blue-600' : 'bg-zinc-700 hover:bg-zinc-600'} rounded"
+         on:click={() => item.pricing_type = 'total'}
+        >
+         Cena souhrnně
+        </button>
+       </div>
+
        <!-- Units, Price, Quantity in grid -->
        <div class="grid grid-cols-2 sm:grid-cols-6 gap-4">
-        <div class="col-span-1 sm:col-span-2">
-         <label class="block text-base text-zinc-400 mb-1">Cena/j.</label>
-         <input
-          type="number"
-          bind:value={item.price_per_unit}
-          class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          min="0"
-          step="1"
-          required
-         />
-        </div>
-        <div class="col-span-2 sm:col-span-2">
-           <label class="block text-base text-zinc-400 mb-1">Počet</label>
-           <input
-            type="number"
-            bind:value={item.quantity}
-            class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min="0"
-            step="0.1"
-            required
-           />
-        </div>
-        <div class="col-span-1 sm:col-span-2">
-         <div class="flex items-end gap-2 h-full">
-          <div class="flex-1">
-         <label class="block text-base text-zinc-400 mb-1">Jednotka</label>
-         <input
-          type="text"
-          bind:value={item.units}
-          class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-         />
-          </div>
-         <button
-         type="button"
-         class="cursor-pointer p-2 text-zinc-400 hover:text-red-500 hover:bg-zinc-600 rounded"
-         on:click={() => removeItem(i)}
-         disabled={formData.items.length === 1}
-        >
-         <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-5 h-5"
-         >
-          <path
-           stroke-linecap="round"
-           stroke-linejoin="round"
-           d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+        {#if item.pricing_type === 'unit'}
+         <div class="col-span-1 sm:col-span-2">
+          <label class="block text-base text-zinc-400 mb-1">Cena/j.</label>
+          <input
+           type="number"
+           bind:value={item.price_per_unit}
+           class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+           min="0"
+           step="1"
+           required
           />
-         </svg>
-        </button>
          </div>
-        </div>
+         <div class="col-span-2 sm:col-span-2">
+          <label class="block text-base text-zinc-400 mb-1">Počet</label>
+          <input
+           type="number"
+           bind:value={item.quantity}
+           class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+           min="0"
+           step="0.1"
+           required
+          />
+         </div>
+         <div class="col-span-1 sm:col-span-2">
+          <div class="flex items-end gap-2 h-full">
+           <div class="flex-1">
+            <label class="block text-base text-zinc-400 mb-1">Jednotka</label>
+            <input
+             type="text"
+             bind:value={item.units}
+             class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+             required
+            />
+           </div>
+           <button
+            type="button"
+            class="cursor-pointer p-2 text-zinc-400 hover:text-red-500 hover:bg-zinc-600 rounded"
+            on:click={() => removeItem(i)}
+            disabled={formData.items.length === 1}
+           >
+            <svg
+             xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke-width="1.5"
+             stroke="currentColor"
+             class="w-5 h-5"
+            >
+             <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+             />
+            </svg>
+           </button>
+          </div>
+         </div>
+        {:else}
+         <div class="col-span-5 sm:col-span-5">
+          <label class="block text-base text-zinc-400 mb-1">Celková cena</label>
+          <input
+           type="number"
+           bind:value={item.price_per_unit}
+           class="w-full bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+           min="0"
+           step="1"
+           required
+          />
+         </div>
+         <div class="col-span-1 sm:col-span-1 flex items-end">
+          <button
+           type="button"
+           class="cursor-pointer p-2 text-zinc-400 hover:text-red-500 hover:bg-zinc-600 rounded"
+           on:click={() => removeItem(i)}
+           disabled={formData.items.length === 1}
+          >
+           <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-5 h-5"
+           >
+            <path
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+            />
+           </svg>
+          </button>
+         </div>
+        {/if}
        </div>
 
        <p class="text-right text-base text-zinc-400">

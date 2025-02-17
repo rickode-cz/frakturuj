@@ -66,7 +66,8 @@ function rk_save_profile($request) {
 
  $fields = array(
      'title', 'ico', 'dic', 'street', 'city', 'psc',
-     'country', 'email', 'phone', 'bank_account', 'bank_code'
+     'country', 'email', 'phone', 'bank_account', 'bank_code',
+     'invoice_text'
  );
 
  foreach ($fields as $field) {
@@ -88,7 +89,7 @@ function rk_get_profile() {
      return array_fill_keys([
          'title', 'ico', 'dic', 'street', 'city', 'psc',
          'country', 'email', 'phone', 'bank_account', 'bank_code',
-         'user_id'
+         'invoice_text', 'user_id'
      ], '');
  }
 
@@ -103,6 +104,7 @@ function rk_get_profile() {
      'email' => get_option("rk_profile_{$user_id}_email", ''),
      'phone' => get_option("rk_profile_{$user_id}_phone", ''),
      'bank_account' => get_option("rk_profile_{$user_id}_bank_account", ''),
-     'bank_code' => get_option("rk_profile_{$user_id}_bank_code", '')
+     'bank_code' => get_option("rk_profile_{$user_id}_bank_code", ''),
+     'invoice_text' => get_option("rk_profile_{$user_id}_invoice_text", 'Fyzická osoba zapsaná v živnostenském rejstříku.')
  );
 }

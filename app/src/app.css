@@ -6,3 +6,7 @@
  --font-serif: "Chango", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
+button {
+ @apply cursor-pointer;
+}
+

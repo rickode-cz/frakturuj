@@ -4,6 +4,12 @@
  import InvoiceForm from "./InvoiceForm.svelte";
  export let data;
 
+ // Filter state
+ let selectedCustomer = "";
+ let selectedMonth = "";
+ let selectedStatus = ""; // all/paid/unpaid/overdue
+ let searchQuery = "";
+
  $: invoices = data?.invoices || [];
  $: customers = data?.customers || [];
 
@@ -17,10 +23,58 @@
   selectedYear.set(years[0]);
  }
 
- // Filter invoices by selected year and sort by created date desc
+ // Enhanced filtering with all filters
  $: filteredInvoices = invoices
   .filter((inv) => new Date(inv.created_date).getFullYear() === $selectedYear)
+  .filter((inv) => !selectedCustomer || inv.acf.customer === selectedCustomer)
+  .filter((inv) => {
+    if (selectedMonth === "") return true;
+    return new Date(inv.created_date).getMonth() === parseInt(selectedMonth);
+  })
+  .filter((inv) => {
+    if (!selectedStatus) return true;
+    const now = new Date();
+    const maturity = new Date(inv.acf.maturity);
+    
+    switch(selectedStatus) {
+      case 'paid': return inv.acf.paid;
+      case 'unpaid': return !inv.acf.paid && maturity >= now;
+      case 'overdue': return !inv.acf.paid && maturity < now;
+      default: return true;
+    }
+  })
+  .filter((inv) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    // Search in items
+    try {
+      const items = JSON.parse(inv.acf.items)?.items || [];
+      return items.some(item => 
+        item.name.toLowerCase().includes(query) ||
+        (item.units || "").toLowerCase().includes(query)
+      );
+    } catch (e) {
+      return false;
+    }
+  })
   .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+
+ // Get months for dropdown
+ $: months = [...new Set(
+   invoices
+    .filter(inv => new Date(inv.created_date).getFullYear() === $selectedYear)
+    .map(inv => new Date(inv.created_date).getMonth())
+ )].sort((a, b) => a - b);
+
+ // Clear month selection when year changes to prevent invalid filtering
+ $: if ($selectedYear) {
+  selectedMonth = "";
+ }
+
+ // Format month number to name
+ function getMonthName(monthNumber) {
+   return new Date(2000, monthNumber).toLocaleString('cs-CZ', { month: 'long' });
+ }
 
  // Calculate yearly totals
  $: yearlyStats = {
@@ -75,6 +129,13 @@
   duplicatingInvoice = true;
   showInvoiceForm = true;
  }
+
+ function resetFilters() {
+  selectedCustomer = "";
+  selectedMonth = "";
+  selectedStatus = "";
+  searchQuery = "";
+ }
 </script>
 
 <div class="bg-zinc-800 p-4 sm:p-6 rounded-lg">
@@ -116,6 +177,78 @@
    {/each}
   </div>
  </div>
+
+ <!-- Filters -->
+ <div class="flex flex-col sm:flex-row gap-4 mb-6">
+  <div class="flex-1 flex flex-col sm:flex-row gap-4">
+   <select
+    bind:value={selectedCustomer}
+    class="bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+   >
+    <option value="">Všichni zákazníci</option>
+    {#each customers as customer}
+     <option value={customer.id}>{customer.title}</option>
+    {/each}
+   </select>
+
+   <select
+    bind:value={selectedMonth}
+    class="bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+   >
+    <option value="">Všechny měsíce</option>
+    {#each months as month}
+     <option value={month}>{getMonthName(month)}</option>
+    {/each}
+   </select>
+
+   <select
+    bind:value={selectedStatus}
+    class="bg-zinc-700 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+   >
+    <option value="">Všechny stavy</option>
+    <option value="paid">Zaplacené</option>
+    <option value="unpaid">Vystavené</option>
+    <option value="overdue">Po splatnosti</option>
+   </select>
+  </div>
+
+  {#if selectedCustomer || selectedMonth || selectedStatus || searchQuery}
+    <button
+      class="px-3 py-2 bg-red-900 text-red-300 rounded flex items-center gap-2 whitespace-nowrap"
+      on:click={resetFilters}
+      title="Zrušit filtry"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+  {/if}
+</div>
+
+<div class="flex gap-4 mb-6">
+  <div class="relative flex-1">
+    <input
+      type="text"
+      bind:value={searchQuery}
+      placeholder="Hledat v položkách faktury..."
+      class="w-full bg-zinc-700 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke-width="1.5" 
+      stroke="currentColor" 
+      class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+    >
+      <path 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" 
+      />
+    </svg>
+  </div>
+</div>
 
  <div class="space-y-4">
   {#each filteredInvoices as invoice}
