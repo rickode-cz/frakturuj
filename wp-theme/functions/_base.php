@@ -59,3 +59,6 @@ function rk_disable_preview_button()
   }
 }
 add_action('admin_head', 'rk_disable_preview_button');
+
+/* Hide ACF */
+add_filter('acf/settings/show_admin', '__return_false');
