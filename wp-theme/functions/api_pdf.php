@@ -195,8 +195,7 @@ function rk_generate_invoice_pdf($request) {
                 <h3>Odběratel</h3>
                 <p>' . esc_html($customer->post_title) . '<br>
                 IČO: ' . esc_html(get_field('ico', $customer_id)) . '<br>
-                ' . (!empty(get_field('dic', $customer_id)) ? 'DIČ: ' . esc_html(get_field('dic', $customer_id)) : 'Neplátce DPH') . '<br>
-                ' . esc_html(get_field('street', $customer_id)) . '<br>
+                ' . (!empty(get_field('dic', $customer_id)) ? 'DIČ: ' . esc_html(get_field('dic', $customer_id)). '<br>' : '') . esc_html(get_field('street', $customer_id)) . '<br>
                 ' . esc_html(get_field('city', $customer_id)) . ' ' . esc_html(get_field('psc', $customer_id)) . '<br>
                 ' . esc_html(get_field('country', $customer_id)) . '</p>
             </div>

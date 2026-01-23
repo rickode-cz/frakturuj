@@ -1,6 +1,6 @@
 const BASE_URL = import.meta.env.DEV 
     ? 'http://localhost:10076/wp-json' 
-    : window.location.origin + '/wp-json';
+    : window.wpSettings?.restUrl?.replace(/\/$/, '') || (window.location.origin + '/wp-json');
 
 let nonce = window.wpSettings?.nonce;
 let refreshInterval;
